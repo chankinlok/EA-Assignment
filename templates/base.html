@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-HK" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LIHKG 討論區{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- 讀取 Theme 偏好儲存 -->
+    <script>
+        if (localStorage.getItem('theme') === 'light') {
+            document.documentElement.classList.remove('dark');
+        } else {
+            document.documentElement.classList.add('dark');
+        }
+
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        lihkg: { 
+                            yellow: '#eed012', 
+                            yellowHover: '#d4b70b', 
+                            darkBg: '#18191c', 
+                            darkCard: '#1f2125', 
+                            darkHover: '#272a30', 
+                            darkBorder: '#2c2e33' 
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100 text-gray-900 dark:bg-lihkg-darkBg dark:text-gray-100 min-h-screen flex flex-col transition-colors duration-200">
+
+    <!-- TOP NAVBAR -->
+    <header class="sticky top-0 z-40 bg-white dark:bg-lihkg-darkCard border-b border-gray-200 dark:border-lihkg-darkBorder shadow-sm transition-colors duration-200">
+        <div class="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
+            
+            <!-- Brand Logo (更新黃色色碼與漸層質感) -->
+            <a href="{{ url_for('home') }}" class="flex items-center gap-2 font-bold text-lg text-lihkg-yellow">
+                <div class="w-8 h-8 rounded-full overflow-hidden shadow-sm flex items-center justify-center shrink-0">
+                    <svg viewBox="0 0 100 100" class="w-full h-full">
+                        <defs>
+                            <linearGradient id="logoYellowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#f8e71c" />
+                                <stop offset="100%" stop-color="#d8af00" />
+                            </linearGradient>
+                        </defs>
+                        <!-- 黑色外框與黃色背景 -->
+                        <circle cx="50" cy="50" r="45" fill="url(#logoYellowGrad)" stroke="#000000" stroke-width="10"/>
+                        <!-- 眼睛 -->
+                        <circle cx="36" cy="36" r="6.5" fill="#000000"/>
+                        <circle cx="64" cy="36" r="6.5" fill="#000000"/>
+                        <!-- 微笑 -->
+                        <path d="M 27 52 A 23 23 0 0 0 73 52" fill="none" stroke="#000000" stroke-width="9" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <span class="font-bold text-gray-900 dark:text-white">LIHKG <span class="text-xs px-1.5 py-0.5 rounded bg-lihkg-yellow/10 text-lihkg-yellow border border-lihkg-yellow/30">討論區</span></span>
+            </a>
+
+            <!-- Right Header Actions -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <!-- 發帖按鈕 (黃色) -->
+                <button id="openCreateModalBtn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-lihkg-yellow hover:bg-lihkg-yellowHover text-gray-900 text-xs font-bold transition-colors">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>發帖</span>
+                </button>
+
+                <!-- 黑夜 / 淺色模式切換按鈕 -->
+                <button id="themeToggleBtn" title="切換深色/淺色模式" class="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-lihkg-darkHover transition-colors">
+                    <i class="fa-solid fa-moon dark:hidden"></i>
+                    <i class="fa-solid fa-sun hidden dark:inline text-amber-400"></i>
+                </button>
+
+                <!-- User Profile / Login Status -->
+                <div class="pl-2 border-l border-gray-200 dark:border-lihkg-darkBorder flex items-center gap-2">
+                    {% if user %}
+                        <span class="text-xs font-medium text-gray-700 dark:text-gray-300">👤 {{ user }}</span>
+                        <a href="{{ url_for('logout') }}" class="text-xs text-red-500 hover:underline">登出</a>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="px-3 py-1.5 rounded-lg bg-lihkg-yellow hover:bg-lihkg-yellowHover text-gray-900 text-xs font-bold transition-colors">登入</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <div class="max-w-7xl mx-auto w-full flex flex-1 px-4 py-4 gap-4">
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 bg-white dark:bg-lihkg-darkCard border border-gray-200 dark:border-lihkg-darkBorder rounded-xl p-3 shrink-0 hidden md:block transition-colors duration-200">
+            <div class="px-3 py-2 text-xs font-semibold text-gray-400">討論區分台</div>
+            <nav class="space-y-1">
+                {% for cat in categories %}
+                    <a href="{{ url_for('home', cat=cat.id) }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium {% if current_cat == cat.id %}bg-lihkg-yellow text-gray-900 font-bold{% else %}text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-lihkg-darkHover{% endif %} transition-colors">
+                        <span>{{ cat.icon }}</span>
+                        <span>{{ cat.name }}</span>
+                    </a>
+                {% endfor %}
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 min-w-0">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- CREATE NEW THREAD MODAL (發帖彈出視窗) -->
+    <div id="createModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 opacity-0 pointer-events-none transition-opacity duration-200 p-4">
+        <div class="bg-white dark:bg-lihkg-darkCard border border-gray-200 dark:border-lihkg-darkBorder rounded-2xl max-w-lg w-full p-6 shadow-2xl transform scale-95 transition-transform duration-200">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between pb-4 border-b border-gray-200 dark:border-lihkg-darkBorder">
+                <h2 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square text-lihkg-yellow"></i>
+                    發表新主題
+                </h2>
+                <button id="closeModalBtn" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Modal Form -->
+            <form action="{{ url_for('create_thread') }}" method="POST" class="mt-4 space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">選擇討論區分台</label>
+                    <select name="category_id" class="w-full p-2.5 text-sm rounded-lg bg-gray-50 dark:bg-lihkg-darkBg border border-gray-200 dark:border-lihkg-darkBorder text-gray-900 dark:text-white focus:outline-none focus:border-lihkg-yellow">
+                        {% for cat in categories %}
+                            {% if cat.id != 'all' %}
+                                <option value="{{ cat.id }}">{{ cat.icon }} {{ cat.name }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">主題標題</label>
+                    <input type="text" name="title" placeholder="請輸入吸引人嘅主題標題..." class="w-full p-2.5 text-sm rounded-lg bg-gray-50 dark:bg-lihkg-darkBg border border-gray-200 dark:border-lihkg-darkBorder text-gray-900 dark:text-white focus:outline-none focus:border-lihkg-yellow" required>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">內文詳情</label>
+                    <textarea name="body" rows="5" placeholder="分享你嘅想法、問題或討論內容..." class="w-full p-2.5 text-sm rounded-lg bg-gray-50 dark:bg-lihkg-darkBg border border-gray-200 dark:border-lihkg-darkBorder text-gray-900 dark:text-white focus:outline-none focus:border-lihkg-yellow resize-none" required></textarea>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" id="cancelModalBtn" class="px-4 py-2 rounded-lg text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-lihkg-darkHover">取消</button>
+                    <button type="submit" class="px-5 py-2 rounded-lg text-xs font-bold text-gray-900 bg-lihkg-yellow hover:bg-lihkg-yellowHover shadow transition-colors">即時發佈</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const createModal = document.getElementById('createModal');
+        const openBtn = document.getElementById('openCreateModalBtn');
+        const closeBtn = document.getElementById('closeModalBtn');
+        const cancelBtn = document.getElementById('cancelModalBtn');
+
+        function openModal() {
+            createModal.classList.remove('opacity-0', 'pointer-events-none');
+            createModal.querySelector('div').classList.remove('scale-95');
+            createModal.querySelector('div').classList.add('scale-100');
+        }
+
+        function closeModal() {
+            createModal.classList.add('opacity-0', 'pointer-events-none');
+            createModal.querySelector('div').classList.remove('scale-100');
+            createModal.querySelector('div').classList.add('scale-95');
+        }
+
+        openBtn.addEventListener('click', openModal);
+        closeBtn.addEventListener('click', closeModal);
+        cancelBtn.addEventListener('click', closeModal);
+
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+        themeToggleBtn.addEventListener('click', () => {
+            const html = document.documentElement;
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        });
+    </script>
+</body>
+</html>
